@@ -1,27 +1,29 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
+from api.views import (TagViewSet, RecipeViewSet, IngredientViewSet)
+
 # from api.views import (TagsViewSet, CustomUserViewSet, IngredientsViewSet,
 #                        RecipesViewSet, FavoritesViewSet, CartViewSet,
 #                        SubscriptionsViewSet, SubscribeViewSet,
 #                        TokenObtainView, UserRegistrationViewSet)
 
-# router_version1 = DefaultRouter()
+router_version1 = DefaultRouter()
 # router_version1.register(
 #     'users',
 #     CustomUserViewSet,
 #     basename='user')
-# router_version1.register(
-#     r'tags',
-#     TagsViewSet)
-# router_version1.register(
-#     r'recipes',
-#     RecipesViewSet)
-# router_version1.register(
-#     'ingredients',
-#     IngredientsViewSet,
-#     basename='ingredients'
-# )
+router_version1.register(
+    r'tags',
+    TagViewSet)
+router_version1.register(
+    r'recipes',
+    RecipeViewSet)
+router_version1.register(
+    'ingredients',
+    IngredientViewSet,
+    basename='ingredients'
+)
 # router_version1.register(
 #     r'recipes/(?P<recipes_id>\d+)/favorite',
 #     FavoritesViewSet,
@@ -43,19 +45,9 @@ from rest_framework.routers import DefaultRouter
 #     basename='subscribe'
 # )
 
-# auth_urls = [
-#     path(
-#         'signup/',
-#         UserRegistrationViewSet.as_view(
-#             {'post': 'create'}
-#         ),
-#         name='signup'
-#     ),
-#     path('token/', TokenObtainView.as_view(), name='token_obtain'),
-# ]
 
 urlpatterns = [
-    # path('', include(router_version1.urls)),
+    path('', include(router_version1.urls)),
     path('', include('djoser.urls')),
     path(r'auth/', include('djoser.urls.authtoken')),
 ]
