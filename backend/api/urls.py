@@ -24,11 +24,11 @@ router_version1.register(
     IngredientViewSet,
     basename='ingredients'
 )
-# router_version1.register(
-#     r'recipes/(?P<recipes_id>\d+)/favorite',
-#     FavoritesViewSet,
-#     basename='favorite'
-# )
+router_version1.register(
+    r'recipes/(?P<recipes_id>\d+)/favorite',
+    RecipeViewSet,
+    basename='favorite'
+)
 # router_version1.register(
 #     r'recipes/(?P<recipes_id>\d+)/shopping_cart',
 #     CartViewSet,

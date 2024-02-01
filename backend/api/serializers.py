@@ -1,10 +1,15 @@
-import base64
-from django.core.files.base import ContentFile
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from recipes.models import Recipe, Tag, Ingredient, AmountIngredient
+from recipes.models import (
+    Recipe,
+    Tag,
+    Ingredient,
+    AmountIngredient,
+    Favorites,
+    Cart
+)
 from users.models import CustomUser
 
 
@@ -52,7 +57,19 @@ class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     tags = TagSerializer(read_only=True, many=True)
     author = CustomUserSerializer(read_only=True)
-    # ingredients = AmountIngredientSerializer(read_only=True, many=True)
+    ingredients = AmountIngredientSerializer(read_only=True, many=True)
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
+
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+        user = request.user if request and hasattr(request, 'user') else None
+        return Favorites.objects.filter(user=user, recipe=obj).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        request = self.context.get('request')
+        user = request.user if request and hasattr(request, 'user') else None
+        return Cart.objects.filter(user=user, recipe=obj).exists()
 
     class Meta:
         model = Recipe
@@ -60,15 +77,15 @@ class RecipeSerializer(serializers.ModelSerializer):
                   'tags',
                   'author',
                   'ingredients',
-                #   'is_favorited',
-                #   'is_in_shopping_cart',
+                  'is_favorited',
+                  'is_in_shopping_cart',
                   'name',
                   'image',
                   'text',
                   'cooking_time'
-                )
+                  )
 
-    
+
 
     # def to_internal_value(self, data):
     #     image_data = base64.b64decode(data.get('image', ''))
