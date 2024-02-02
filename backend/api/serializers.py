@@ -71,6 +71,40 @@ class RecipeSerializer(serializers.ModelSerializer):
         user = request.user if request and hasattr(request, 'user') else None
         return Cart.objects.filter(user=user, recipe=obj).exists()
 
+    def create(self, validated_data):
+        ingredients_data = validated_data.pop('ingredients', [])
+        tags_data = validated_data.pop('tags', [])
+        image_data = validated_data.pop('image', [])
+        recipe = Recipe.objects.create(**validated_data)
+        for ingredient_data in ingredients_data:
+            Ingredient.objects.create(recipe=recipe, **ingredient_data)
+        for tag_data in tags_data:
+            Tag.objects.create(recipe=recipe, **tag_data)
+        if image_data:
+            recipe.image.save(image_data.name, image_data, save=True)
+        return recipe
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.cooking_time = validated_data.get('cooking_time',
+                                                   instance.cooking_time)
+        image_data = validated_data.get('image', instance.image)
+        ingredients_data = validated_data.get('ingredients', [])
+        instance.ingredients.all().delete()
+        for ingredient_data in ingredients_data:
+            Ingredient.objects.create(recipe=instance, **ingredient_data)
+        tags_data = validated_data.get('tags', [])
+        instance.tags.all().delete()
+        for tag_data in tags_data:
+            Tag.objects.create(recipe=instance, **tag_data)
+        if image_data:
+            instance.image.save(image_data.name, image_data, save=True)
+        elif 'image' in validated_data:
+            instance.image.delete()
+        instance.save()
+        return instance
+
     class Meta:
         model = Recipe
         fields = ('id',

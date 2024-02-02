@@ -93,3 +93,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
             writer.writerow([recipe.name, ingredients, recipe.cooking_time])
         return response
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
