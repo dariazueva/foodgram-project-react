@@ -13,7 +13,8 @@ from rest_framework.response import Response
 from api.serializers import (
     RecipeSerializer,
     TagSerializer,
-    IngredientSerializer
+    IngredientSerializer,
+    AddToRecipeSerializer
 )
 from recipes.models import (
     Recipe,
@@ -60,12 +61,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             Favorites.objects.create(user=user, recipe=recipe)
-            return Response(status=status.HTTP_201_CREATED)
+            serializer = AddToRecipeSerializer(recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=(IsAuthenticated,))
-    def get_is_in_shopping_cart(self, request, pk=None):
+    def shopping_cart(self, request, pk=None):
         recipe = get_object_or_404(Recipe, id=self.kwargs['pk'])
         user = request.user
         if Cart.objects.filter(user=user, recipe=recipe).exists():
@@ -73,7 +75,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             Cart.objects.create(user=user, recipe=recipe)
-            return Response(status=status.HTTP_201_CREATED)
+            serializer = AddToRecipeSerializer(recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['get'],
             permission_classes=(IsAuthenticated,))

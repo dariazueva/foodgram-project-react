@@ -51,6 +51,17 @@ class AmountIngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
+class AddToRecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор для добавления в список покупок и в избранное рецептов."""
+
+    image = Base64ImageField
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+        read_only_fields = ('id', 'name', 'image', 'cooking_time')
+
+
 class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Recipe."""
 
