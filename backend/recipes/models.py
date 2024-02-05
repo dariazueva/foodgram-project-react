@@ -43,27 +43,32 @@ class Tag(models.Model):
 class Recipe(models.Model):
     """Модель 'Рецепт'."""
 
-    name = models.CharField('Название', max_length=200)
+    name = models.CharField('Название', max_length=200,
+                            blank=False, null=False)
     image = models.ImageField('Картинка',
                               upload_to='recipes/images/',
                               default=None,
+                              blank=False, null=False
                               )
-    text = models.TextField('Описание')
+    text = models.TextField('Описание', blank=False, null=False)
     ingredients = models.ManyToManyField(
         Ingredient,
         verbose_name='Ингредиенты',
         related_name='resipes',
+        blank=False,
     )
     tags = models.ManyToManyField(Tag,
                                   verbose_name='Теги',
                                   related_name='recipes',
+                                  blank=False,
                                   )
     cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления',
         default=0,
         validators=(
             MinValueValidator(limit_value=1),
-        )
+        ),
+        blank=False, null=False
     )
     pub_date = models.DateTimeField(
         'Дата публикации',
@@ -74,6 +79,7 @@ class Recipe(models.Model):
         verbose_name='Автор',
         related_name='recipes',
         on_delete=models.CASCADE,
+        blank=False, null=False
     )
 
     class Meta:

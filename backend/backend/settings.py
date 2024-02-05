@@ -86,7 +86,10 @@ REST_FRAMEWORK = {
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ]
+    ],
+    'DEFAULT_PAGINATION_CLASS':
+    'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 6,
 }
 
 
@@ -96,12 +99,14 @@ DJOSER = {
     'SERIALIZERS': {
         'user': 'api.serializers.CustomUserSerializer',
         'current_user': 'api.serializers.CustomUserSerializer',
-        "user_list": "api.serializers.CustomUserSerializer",
-        "user_create": "api.serializers.CustomUserSerializer",
+        'user_list': 'api.serializers.CustomUserSerializer',
+        'user_create': 'api.serializers.CustomUserSerializer',
     },
     'PERMISSIONS': {
         'user': ('rest_framework.permissions.IsAuthenticated',),
-        'user_list': ('rest_framework.permissions.AllowAny',)
+        'user_list': ('rest_framework.permissions.AllowAny',),
+        'user_create': ('rest_framework.permissions.AllowAny',),
+        'current_user': ('rest_framework.permissions.IsAuthenticated',),
     }
 }
 

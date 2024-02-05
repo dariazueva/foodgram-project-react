@@ -1,4 +1,4 @@
-from djoser.serializers import UserSerializer
+from djoser.serializers import UserSerializer, UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
@@ -19,6 +19,24 @@ class CustomUserSerializer(UserSerializer):
     class Meta:
         model = CustomUser
         fields = ('email', 'id', 'username', 'first_name', 'last_name')
+
+
+# class CustomUserCreateSerializer(UserCreateSerializer):
+#     """Сериализатор для создания пользователя."""
+
+#     email = serializers.EmailField()
+#     username = serializers.CharField()
+
+#     class Meta:
+#         model = CustomUser
+#         fields = ('email', 'id', 'username', 'first_name', 'last_name')
+#         extra_kwargs = {
+#             'email': {'required': True},
+#             'username': {'required': True},
+#             'password': {'required': True},
+#             'first_name': {'required': True},
+#             'last_name': {'required': True},
+#         }
 
 
 class TagSerializer(serializers.ModelSerializer):

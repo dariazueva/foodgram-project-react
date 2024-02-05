@@ -10,6 +10,7 @@ from rest_framework.permissions import (
 )
 from rest_framework.response import Response
 
+from api.pagination import CustomPaginator
 from api.serializers import (
     RecipeSerializer,
     TagSerializer,
@@ -29,6 +30,7 @@ class CustomUserViewSet(UserViewSet):
     """ViewSet для управления пользовательскими данными."""
 
     permission_classes = (IsAuthenticatedOrReadOnly,)
+    pagination_class = CustomPaginator
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -36,6 +38,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    pagination_class = None
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
