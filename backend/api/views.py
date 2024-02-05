@@ -11,6 +11,7 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 
 from api.pagination import CustomPaginator
+from api.permissions import AdminOrReadOnly
 from api.serializers import (
     RecipeSerializer,
     TagSerializer,
@@ -38,7 +39,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    pagination_class = None
+    permission_classes = [AdminOrReadOnly,]
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
