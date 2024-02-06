@@ -1,4 +1,4 @@
-from djoser.serializers import UserSerializer, UserCreateSerializer
+from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
@@ -91,14 +91,14 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     def get_is_favorited(self, obj):
-        request = self.context.get('request')
-        user = request.user if request and hasattr(request, 'user') else None
-        return Favorites.objects.filter(user=user, recipe=obj).exists()
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return Favorites.objects.filter(user=user, recipe=obj).exists()
 
     def get_is_in_shopping_cart(self, obj):
-        request = self.context.get('request')
-        user = request.user if request and hasattr(request, 'user') else None
-        return Cart.objects.filter(user=user, recipe=obj).exists()
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return Cart.objects.filter(user=user, recipe=obj).exists()
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients', [])

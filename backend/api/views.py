@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
     IsAuthenticated
@@ -11,7 +12,7 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 
 from api.pagination import CustomPaginator
-from api.permissions import AdminOrReadOnly
+from api.permissions import AdminOrReadOnly, AuthorAdminOrReadOnly
 from api.serializers import (
     RecipeSerializer,
     TagSerializer,
@@ -30,7 +31,7 @@ from recipes.models import (
 class CustomUserViewSet(UserViewSet):
     """ViewSet для управления пользовательскими данными."""
 
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = [IsAuthenticatedOrReadOnly,]
     pagination_class = CustomPaginator
 
 
@@ -54,9 +55,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
+    permission_classes = [AuthorAdminOrReadOnly,]
 
     @action(detail=True, methods=['post', 'delete'],
-            permission_classes=(IsAuthenticated,))
+            permission_classes=[IsAuthenticated,])
     def favorite(self, request, pk=None):
         recipe = get_object_or_404(Recipe, id=self.kwargs['pk'])
         user = request.user
@@ -70,7 +72,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
     @action(detail=True, methods=['post', 'delete'],
-            permission_classes=(IsAuthenticated,))
+            permission_classes=[IsAuthenticated,])
     def shopping_cart(self, request, pk=None):
         recipe = get_object_or_404(Recipe, id=self.kwargs['pk'])
         user = request.user
@@ -83,7 +85,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['get'],
-            permission_classes=(IsAuthenticated,))
+            permission_classes=[IsAuthenticated,])
     def download_shopping_cart(self, request):
         user = request.user
         recipes_in_cart = Recipe.objects.filter(cart__user=user)
@@ -102,4 +104,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return response
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        if self.request.user.is_authenticated:
+            serializer.save(author=self.request.user)
+        else:
+            raise AuthenticationFailed()
