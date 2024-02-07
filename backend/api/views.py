@@ -17,7 +17,8 @@ from api.serializers import (
     RecipeSerializer,
     TagSerializer,
     IngredientSerializer,
-    AddToRecipeSerializer
+    AddToRecipeSerializer,
+    SubscribeSerializer
 )
 from recipes.models import (
     Recipe,
@@ -26,6 +27,7 @@ from recipes.models import (
     Favorites,
     Cart,
 )
+from users.models import CustomUser, Subscriptions
 
 
 class CustomUserViewSet(UserViewSet):
@@ -33,6 +35,43 @@ class CustomUserViewSet(UserViewSet):
 
     permission_classes = [IsAuthenticatedOrReadOnly,]
     pagination_class = CustomPaginator
+    serializer_class = SubscribeSerializer
+
+    @action(detail=True, methods=['post', 'delete'],
+            permission_classes=[IsAuthenticated,])
+    def subscribe(self, request, **kwargs):
+        user = request.user
+        author = get_object_or_404(CustomUser, pk=self.kwargs['id'])
+        if user == author:
+            return Response({'errors': 'Нельзя подписаться на самого себя'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if request.method == 'POST':
+            subscription, created = Subscriptions.objects.get_or_create(user=user, author=author)
+            if created:
+                serializer = SubscribeSerializer(subscription,
+                                             context={'request': request})
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response({'errors': 'Вы уже подписаны на данного пользователя'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        elif request.method == 'DELETE':
+            subscription = Subscriptions.objects.filter(user=user, author=author).first()
+            if subscription:
+                subscription.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response({'errors': 'Вы не подписаны на данного пользователя'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'],
+            permission_classes=(IsAuthenticated,))
+    def subscriptions(self, request):
+        user = request.user
+        queryset = Subscriptions.objects.filter(user=user)
+        page = self.paginate_queryset(queryset)
+        serializer = SubscribeSerializer(page, many=True,
+                                         context={'request': request})
+        return self.get_paginated_response(serializer.data)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -41,6 +80,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [AdminOrReadOnly,]
+    pagination_class = None
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):

@@ -10,15 +10,29 @@ from recipes.models import (
     Favorites,
     Cart
 )
-from users.models import CustomUser
+from users.models import CustomUser, Subscriptions
 
 
 class CustomUserSerializer(UserSerializer):
     """Сериализатор для пользовательской модели."""
 
+    is_subscribed = serializers.SerializerMethodField()
+
     class Meta:
         model = CustomUser
-        fields = ('email', 'id', 'username', 'first_name', 'last_name')
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed'
+        )
+
+    def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return user.subscriptions.filter(author=obj.id).exists()
 
 
 # class CustomUserCreateSerializer(UserCreateSerializer):
@@ -37,6 +51,54 @@ class CustomUserSerializer(UserSerializer):
 #             'first_name': {'required': True},
 #             'last_name': {'required': True},
 #         }
+
+
+class AddToRecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор для добавления в список покупок и в избранное рецептов."""
+
+    image = Base64ImageField
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+        read_only_fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class SubscribeSerializer(CustomUserSerializer):
+    """Сериализатор для модели Subscriptions."""
+
+    id = serializers.ReadOnlyField(source='author.id')
+    email = serializers.ReadOnlyField(source='author.email')
+    username = serializers.ReadOnlyField(source='author.username')
+    first_name = serializers.ReadOnlyField(source='author.first_name')
+    last_name = serializers.ReadOnlyField(source='author.last_name')
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Subscriptions
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count'
+        )
+
+    def get_is_subscribed(self, obj):
+        return Subscriptions.objects.filter(user=obj.user, author=obj.author).exists()
+
+    def get_recipes_count(self, obj):
+        return Recipe.objects.filter(author=obj.author).count()
+
+    def get_recipes(self, obj):
+        recipes = Recipe.objects.filter(author=obj.author)
+        serializer = RecipeSerializer(recipes, many=True, read_only=True)
+        return serializer.data
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -67,17 +129,6 @@ class AmountIngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = AmountIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
-
-
-class AddToRecipeSerializer(serializers.ModelSerializer):
-    """Сериализатор для добавления в список покупок и в избранное рецептов."""
-
-    image = Base64ImageField
-
-    class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
-        read_only_fields = ('id', 'name', 'image', 'cooking_time')
 
 
 class RecipeSerializer(serializers.ModelSerializer):
