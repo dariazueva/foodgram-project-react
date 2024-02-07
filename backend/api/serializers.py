@@ -30,9 +30,11 @@ class CustomUserSerializer(UserSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        user = self.context['request'].user
-        if user.is_authenticated:
-            return user.subscriptions.filter(author=obj.id).exists()
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            user = request.user
+            return Subscriptions.objects.filter(user=user, author=obj).exists()
+        return False
 
 
 # class CustomUserCreateSerializer(UserCreateSerializer):
@@ -90,15 +92,17 @@ class SubscribeSerializer(CustomUserSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        return Subscriptions.objects.filter(user=obj.user, author=obj.author).exists()
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return Subscriptions.objects.filter(user=user, author=obj).exists()
+        return False
 
     def get_recipes_count(self, obj):
-        return Recipe.objects.filter(author=obj.author).count()
+        return obj.recipes.count()
 
     def get_recipes(self, obj):
-        recipes = Recipe.objects.filter(author=obj.author)
-        serializer = RecipeSerializer(recipes, many=True, read_only=True)
-        return serializer.data
+        recipes = Recipe.objects.filter(author=obj)
+        return RecipeSerializer(recipes, many=True, read_only=True).data
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -142,14 +146,19 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     def get_is_favorited(self, obj):
-        user = self.context['request'].user
-        if user.is_authenticated:
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            user = request.user
             return Favorites.objects.filter(user=user, recipe=obj).exists()
+        return False
 
     def get_is_in_shopping_cart(self, obj):
-        user = self.context['request'].user
-        if user.is_authenticated:
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            user = request.user
             return Cart.objects.filter(user=user, recipe=obj).exists()
+        return False
+
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients', [])
