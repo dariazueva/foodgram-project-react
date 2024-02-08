@@ -20,7 +20,9 @@ from api.serializers import (
     TagSerializer,
     IngredientSerializer,
     AddToRecipeSerializer,
-    SubscribeSerializer
+    SubscribeSerializer,
+    CustomUserSerializer,
+    # CustomUserCreateSerializer
 )
 from recipes.models import (
     Recipe,
@@ -37,7 +39,13 @@ class CustomUserViewSet(UserViewSet):
 
     permission_classes = [IsAuthenticatedOrReadOnly,]
     pagination_class = CustomPaginator
-    serializer_class = SubscribeSerializer
+    # serializer_class = SubscribeSerializer
+    # serializer_class = CustomUserSerializer
+
+    # def get_serializer_class(self):
+    #     if self.action in ('get',):
+    #         return CustomUserSerializer
+    #     return CustomUserCreateSerializer
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated,])

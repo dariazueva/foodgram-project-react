@@ -1,4 +1,4 @@
-from djoser.serializers import UserSerializer
+from djoser.serializers import UserSerializer, UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
@@ -28,6 +28,13 @@ class CustomUserSerializer(UserSerializer):
             'last_name',
             'is_subscribed'
         )
+        extra_kwargs = {
+            'email': {'required': True},
+            'username': {'required': True},
+            'password': {'required': True},
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+        }
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
