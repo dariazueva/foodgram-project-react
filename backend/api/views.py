@@ -22,7 +22,6 @@ from api.serializers import (
     AddToRecipeSerializer,
     SubscribeSerializer,
     CustomUserSerializer,
-    # CustomUserCreateSerializer
 )
 from recipes.models import (
     Recipe,
@@ -42,10 +41,11 @@ class CustomUserViewSet(UserViewSet):
     # serializer_class = SubscribeSerializer
     # serializer_class = CustomUserSerializer
 
-    # def get_serializer_class(self):
-    #     if self.action in ('get',):
-    #         return CustomUserSerializer
-    #     return CustomUserCreateSerializer
+    @action(detail=False, methods=['get'],
+            permission_classes=(IsAuthenticated,))
+    def me(self, request):
+        serializer = CustomUserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated,])
@@ -138,11 +138,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer = AddToRecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['get'],
+    @action(detail=False, methods=['get'],
             permission_classes=[IsAuthenticated,])
     def download_shopping_cart(self, request):
         user = request.user
-        recipes_in_cart = Recipe.objects.filter(cart__user=user)
+        recipes_in_cart = Cart.objects.filter(user=user)
         response = HttpResponse(content_type='text/csv; charset=utf-8')
         response['Content-Disposition'] = 'attachment; '
         'filename="shopping_cart.csv"'

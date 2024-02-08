@@ -23,20 +23,22 @@ router_version1.register(
     CustomUserViewSet,
     basename='users'
 )
-router_version1.register(
-    r'recipes/(?P<recipes_id>\d+)/favorite',
-    RecipeViewSet,
-    basename='favorite'
-)
-router_version1.register(
-    r'users/(?P<users_id>\d+)/subscribe',
-    CustomUserViewSet,
-    basename='subscribe'
-)
+# router_version1.register(
+#     r'recipes/(?P<recipes_id>\d+)/favorite',
+#     RecipeViewSet,
+#     basename='favorite'
+# )
+# router_version1.register(
+#     r'users/(?P<users_id>\d+)/subscribe',
+#     CustomUserViewSet,
+#     basename='subscribe'
+# )
 
 
 urlpatterns = [
     path('', include(router_version1.urls)),
     path('', include('djoser.urls')),
     path(r'auth/', include('djoser.urls.authtoken')),
+    path('recipes/download_shopping_cart/', RecipeViewSet,
+         name='download_shopping_cart')
 ]

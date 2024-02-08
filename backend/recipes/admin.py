@@ -15,6 +15,11 @@ from recipes.models import (
 admin.site.empty_value_display = 'Не задано'
 
 
+class IngredientInline(admin.TabularInline):
+    model = AmountIngredient
+    extra = 1
+
+
 class RecipeResource(resources.ModelResource):
     """Ресурс для экспорта и импорта рецепта."""
 
@@ -43,6 +48,7 @@ class RecipeAdmin(ImportExportModelAdmin):
         'author',
     )
     list_display_links = ('name',)
+    inlines = (IngredientInline,)
 
     def count_favorites(self, obj: Recipe):
         return obj.favorite_recipe.count()

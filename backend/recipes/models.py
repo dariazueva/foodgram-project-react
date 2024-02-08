@@ -56,6 +56,7 @@ class Recipe(models.Model):
         verbose_name='Ингредиенты',
         related_name='resipes',
         blank=False,
+        through='recipes.AmountIngredient'
     )
     tags = models.ManyToManyField(Tag,
                                   verbose_name='Теги',
@@ -118,7 +119,7 @@ class AmountIngredient(models.Model):
         ordering = ('recipe',)
 
     def __str__(self):
-        return self.amount
+        return f'{self.amount} {self.ingredients}'
 
 
 class Favorites(models.Model):
