@@ -84,6 +84,7 @@ class IngredientAdmin(ImportExportModelAdmin):
     resource_classes = [IngredientResource]
     list_display = ('name', 'measurement_unit',)
     list_filter = ('name',)
+    search_fields = ('name',)
 
 
 class FavoritesResource(resources.ModelResource):

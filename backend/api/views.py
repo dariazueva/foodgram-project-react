@@ -1,4 +1,5 @@
 import csv
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -11,10 +12,7 @@ from rest_framework.permissions import (
     IsAuthenticated
 )
 from rest_framework.response import Response
-# from reportlab.pdfbase import pdfmetrics
-# from reportlab.pdfbase.ttfonts import TTFont
-# from reportlab.pdfgen import canvas
-from django.db.models import Sum
+
 
 from api.filter import RecipeFilter
 from api.pagination import CustomPaginator
@@ -106,6 +104,13 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^name',)
     pagination_class = None
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        name = self.request.query_params.get('name')
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+        return queryset
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
