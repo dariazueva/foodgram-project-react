@@ -1,4 +1,5 @@
-from djoser.serializers import UserSerializer, UserCreateSerializer
+from django.contrib.auth.hashers import make_password
+from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
@@ -26,15 +27,21 @@ class CustomUserSerializer(UserSerializer):
             'username',
             'first_name',
             'last_name',
-            'is_subscribed'
+            'is_subscribed',
+            'password'
         )
         extra_kwargs = {
             'email': {'required': True},
             'username': {'required': True},
-            'password': {'required': True},
+            'password': {'required': True,
+                         'write_only': True},
             'first_name': {'required': True},
             'last_name': {'required': True},
         }
+
+    def create(self, validated_data):
+        validated_data['password'] = make_password(validated_data['password'])
+        return super(UserSerializer, self).create(validated_data)
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
@@ -100,16 +107,17 @@ class SubscribeSerializer(CustomUserSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
-        if user.is_authenticated:
+        if user.is_authenticated and isinstance(obj, CustomUser):
             return Subscriptions.objects.filter(user=user, author=obj).exists()
         return False
 
     def get_recipes_count(self, obj):
-        return obj.recipes.count()
+        return obj.user.recipes.count()
 
     def get_recipes(self, obj):
-        recipes = Recipe.objects.filter(author=obj)
-        return RecipeSerializer(recipes, many=True, read_only=True).data
+        if isinstance(obj, CustomUser):
+            recipes = Recipe.objects.filter(author=obj)
+            return RecipeSerializer(recipes, many=True, read_only=True).data
 
 
 class TagSerializer(serializers.ModelSerializer):

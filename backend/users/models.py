@@ -13,7 +13,6 @@ class CustomUser(AbstractUser):
     email = models.EmailField('Адрес электронной почты', max_length=254)
     first_name = models.CharField('Имя', max_length=150, blank=True)
     last_name = models.CharField('Фамилия', max_length=150, blank=True)
-    password = models.CharField('Пароль', max_length=150)
 
     class Meta:
         verbose_name = 'Пользователь'
