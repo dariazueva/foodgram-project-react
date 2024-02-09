@@ -1,3 +1,4 @@
+import re
 from django.contrib.auth.hashers import make_password
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
@@ -50,23 +51,16 @@ class CustomUserSerializer(UserSerializer):
             return Subscriptions.objects.filter(user=user, author=obj).exists()
         return False
 
+    def validate_email(self, value):
+        if CustomUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError('Пользователь с таким email уже зарегистрирован')
+        return value
 
-# class CustomUserCreateSerializer(UserCreateSerializer):
-#     """Сериализатор для создания пользователя."""
-
-#     email = serializers.EmailField()
-#     username = serializers.CharField()
-
-#     class Meta:
-#         model = CustomUser
-#         fields = ('email', 'id', 'username', 'first_name', 'last_name')
-#         extra_kwargs = {
-#             'email': {'required': True},
-#             'username': {'required': True},
-#             'password': {'required': True},
-#             'first_name': {'required': True},
-#             'last_name': {'required': True},
-#         }
+    def validate_username(self, value):
+        pattern = r'^[\w.@+-]+$'
+        if not re.match(pattern, value):
+            raise serializers.ValidationError('Некорректное имя пользователя')
+        return value
 
 
 class AddToRecipeSerializer(serializers.ModelSerializer):
