@@ -11,6 +11,10 @@ from rest_framework.permissions import (
     IsAuthenticated
 )
 from rest_framework.response import Response
+# from reportlab.pdfbase import pdfmetrics
+# from reportlab.pdfbase.ttfonts import TTFont
+# from reportlab.pdfgen import canvas
+from django.db.models import Sum
 
 from api.filter import RecipeFilter
 from api.pagination import CustomPaginator
@@ -29,6 +33,7 @@ from recipes.models import (
     Ingredient,
     Favorites,
     Cart,
+    AmountIngredient,
 )
 from users.models import CustomUser, Subscriptions
 
@@ -129,36 +134,77 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=[IsAuthenticated,])
     def shopping_cart(self, request, pk=None):
         recipe = get_object_or_404(Recipe, id=self.kwargs['pk'])
-        user = request.user
-        if Cart.objects.filter(user=user, recipe=recipe).exists():
-            Cart.objects.filter(user=user, recipe=recipe).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            Cart.objects.create(user=user, recipe=recipe)
-            serializer = AddToRecipeSerializer(recipe)
+        serializer = AddToRecipeSerializer(recipe)
+        if request.method == 'POST':
+            if Cart.objects.filter(user=request.user, recipe=recipe).exists():
+                return Response({
+                    'errors': 'Рецепт уже добавлен в список'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            Cart.objects.create(user=request.user, recipe=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if request.method == 'DELETE':
+            if not Cart.objects.filter(user=request.user, recipe=recipe).exists():
+                return Response({
+                    'errors': ' Такого рецепта нет в списке'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            Cart.objects.filter(user=request.user, recipe=recipe).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['get'],
-            permission_classes=[IsAuthenticated,])
-    def download_shopping_cart(self, request):
-        user = request.user
-        recipes_in_cart = Cart.objects.filter(user=user)
-        response = HttpResponse(content_type='text/csv; charset=utf-8')
-        response['Content-Disposition'] = 'attachment; '
-        'filename="shopping_cart.csv"'
-        writer = csv.writer(response)
-        writer.writerow(['Recipe Name', 'Ingredients', 'Cooking Time'])
-        for recipe in recipes_in_cart:
-            ingredients = ', '.join(
-                [f'{amount_ingredient.amount}'
-                 '{amount_ingredient.ingredients.name}'
-                 for amount_ingredient in recipe.ingredients.all()]
-            )
-            writer.writerow([recipe.name, ingredients, recipe.cooking_time])
-        return response
+    # @action(detail=False, methods=['get'],
+    #         permission_classes=[IsAuthenticated,])
+    # def download_shopping_cart(self, request):
+    #     user = request.user
+    #     recipes_in_cart = Cart.objects.filter(user=user)
+    #     response = HttpResponse(content_type='text/csv; charset=utf-8')
+    #     response['Content-Disposition'] = 'attachment; '
+    #     'filename="shopping_cart.csv"'
+    #     writer = csv.writer(response)
+    #     writer.writerow(['Recipe Name', 'Ingredients', 'Cooking Time'])
+    #     for recipe in recipes_in_cart:
+    #         ingredients = ', '.join(
+    #             [f'{amount_ingredient.amount}'
+    #              '{amount_ingredient.ingredients.name}'
+    #              for amount_ingredient in recipe.ingredients.all()]
+    #         )
+    #         writer.writerow([recipe.name, ingredients, recipe.cooking_time])
+    #     return response
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
             serializer.save(author=self.request.user)
         else:
             raise AuthenticationFailed()
+
+
+
+
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def download_shopping_cart(self, request):
+        final_list = {}
+        ingredients = AmountIngredient.objects.filter(
+            recipe__in_cart__user=request.user
+        ).values_list(
+            'ingredients__name', 'ingredients__measurement_unit'
+        ).annotate(total_amount=Sum('amount'))
+        for item in ingredients:
+            if len(item) == 2:
+                name, measurement_unit = item
+                amount = 0
+            elif len(item) == 3:
+                name, measurement_unit, amount = item
+            else:
+                continue
+            final_list[name] = {
+                'measurement_unit': measurement_unit,
+                'amount': amount
+            }
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="shopping_cart.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['Наименование ингредиента', 'Единица измерения', 'Количество'])
+        for ingredient, info in final_list.items():
+            writer.writerow([ingredient, info['measurement_unit'], info['amount']])
+        return response
+
+
