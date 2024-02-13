@@ -41,13 +41,11 @@ class CustomUserViewSet(UserViewSet):
 
     permission_classes = [IsAuthenticatedOrReadOnly,]
     pagination_class = CustomPaginator
-    # serializer_class = SubscribeSerializer
-    # serializer_class = CustomUserSerializer
 
     @action(detail=False, methods=['get'],
             permission_classes=(IsAuthenticated,))
     def me(self, request):
-        serializer = CustomUserSerializer(request.user)
+        serializer = CustomUserSerializer(request.user, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post', 'delete'],
@@ -142,7 +140,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             Favorites.objects.filter(user=request.user, recipe=recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated,])
     def shopping_cart(self, request, pk=None):
@@ -156,7 +153,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             Cart.objects.create(user=request.user, recipe=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
-            if not Cart.objects.filter(user=request.user, recipe=recipe).exists():
+            if not Cart.objects.filter(user=request.user,
+                                       recipe=recipe).exists():
                 return Response({
                     'errors': ' Такого рецепта нет в списке'
                 }, status=status.HTTP_400_BAD_REQUEST)
@@ -188,11 +186,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         else:
             raise AuthenticationFailed()
 
-
-
-
-
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'],
+            permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
         final_list = {}
         ingredients = AmountIngredient.objects.filter(
@@ -219,5 +214,3 @@ class RecipeViewSet(viewsets.ModelViewSet):
         for ingredient, info in final_list.items():
             writer.writerow([ingredient, info['measurement_unit'], info['amount']])
         return response
-
-

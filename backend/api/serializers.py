@@ -1,8 +1,10 @@
 import re
 from django.contrib.auth.hashers import make_password
+from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from recipes.models import (
     Recipe,
@@ -50,6 +52,12 @@ class CustomUserSerializer(UserSerializer):
             user = request.user
             return Subscriptions.objects.filter(user=user, author=obj).exists()
         return False
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if self.context['request'].method == 'POST':
+            data.pop('is_subscribed', None)
+        return data
 
     def validate_email(self, value):
         if CustomUser.objects.filter(email=value).exists():
@@ -168,7 +176,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             return Cart.objects.filter(user=user, recipe=obj).exists()
         return False
 
-
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients', [])
         tags_data = validated_data.pop('tags', [])
@@ -216,6 +223,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                   'text',
                   'cooking_time'
                   )
+
 
 
 
