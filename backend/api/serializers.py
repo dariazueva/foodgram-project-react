@@ -156,9 +156,9 @@ class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Recipe."""
 
     image = Base64ImageField()
-    tags = TagSerializer(many=True)
+    tags = TagSerializer(read_only=True, many=True)
     author = CustomUserSerializer(read_only=True)
-    ingredients = AmountIngredientSerializer(many=True)
+    ingredients = AmountIngredientSerializer(read_only=True, many=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
@@ -175,112 +175,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             user = request.user
             return Cart.objects.filter(user=user, recipe=obj).exists()
         return False
-
-    # def tags_exist_validator(self, tags_ids, Tag):
-    #     if not tags_ids:
-    #         raise ValidationError("Не указаны тэги")
-    #     tags = Tag.objects.filter(id__in=tags_ids)
-    #     if len(tags) != len(tags_ids):
-    #         raise ValidationError("Указан несуществующий тэг")
-    #     return tags
-
-    # def ingredients_validator(self, ingredients, Ingredient):
-    #     if not ingredients:
-    #         raise ValidationError("Не указаны ингридиенты")
-    #     valid_ings = {}
-    #     for ing in ingredients:
-    #         if not (isinstance(ing["amount"], int) or ing["amount"].isdigit()):
-    #             raise ValidationError("Неправильное количество ингидиента")
-    #         valid_ings[ing["id"]] = int(ing["amount"])
-    #         if valid_ings[ing["id"]] <= 0:
-    #             raise ValidationError("Неправильное количество ингридиента")
-    #     if not valid_ings:
-    #         raise ValidationError("Неправильные ингидиенты")
-    #     db_ings = Ingredient.objects.filter(pk__in=valid_ings.keys())
-    #     if not db_ings:
-    #         raise ValidationError("Неправильные ингидиенты")
-    #     for ing in db_ings:
-    #         valid_ings[ing.pk] = (ing, valid_ings[ing.pk])
-    #     return valid_ings
-
-    # def validate(self, data):
-    # #     ingredients = self.initial_data.get('ingredients')
-    # #     if not ingredients:
-    # #         raise serializers.ValidationError({
-    # #             'ingredients': 'Нужен хоть один ингридиент для рецепта'})
-    # #     ingredient_list = []
-    # #     for ingredient_item in ingredients:
-    # #         ingredient = get_object_or_404(Ingredient,
-    # #                                        id=ingredient_item['id'])
-    # #         if ingredient in ingredient_list:
-    # #             raise serializers.ValidationError('Ингридиенты должны '
-    # #                                               'быть уникальными')
-    # #         ingredient_list.append(ingredient)
-    # #         if int(ingredient_item['amount']) < 0:
-    # #             raise serializers.ValidationError({
-    # #                 'ingredients': ('Убедитесь, что значение количества '
-    # #                                 'ингредиента больше 0')
-    # #             })
-    # #     data['ingredients'] = ingredients
-    # #     return data
-    #     tags_ids = self.initial_data.get("tags")
-    #     ingredients = self.initial_data.get("ingredients")
-    #     if not tags_ids or not ingredients:
-    #         raise ValidationError("Недостаточно данных.")
-    #     tags = self.tags_exist_validator(tags_ids, Tag)
-    #     ingredients = self.ingredients_validator(ingredients, Ingredient)
-    #     data.update(
-    #         {
-    #             "tags": tags,
-    #             "ingredients": ingredients,
-    #             "author": self.context.get("request").user,
-    #         }
-    #     )
-    #     return data
-
-    # def validate(self, obj):
-    #     for field in ['name', 'text', 'cooking_time']:
-    #         if not obj.get(field):
-    #             raise serializers.ValidationError(
-    #                 f'{field} - Обязательное поле.'
-    #             )
-    #     if not obj.get('tags'):
-    #         raise serializers.ValidationError(
-    #             'Нужно указать минимум 1 тег.'
-    #         )
-    #     if not obj.get('ingredients'):
-    #         raise serializers.ValidationError(
-    #             'Нужно указать минимум 1 ингредиент.'
-    #         )
-    #     inrgedient_id_list = [item['id'] for item in obj.get('ingredients')]
-    #     unique_ingredient_id_list = set(inrgedient_id_list)
-    #     if len(inrgedient_id_list) != len(unique_ingredient_id_list):
-    #         raise serializers.ValidationError(
-    #             'Ингредиенты должны быть уникальны.'
-    #         )
-    #     return obj
-
-    # def validate_tags(self, value):
-    #     if not value:
-    #         raise ValidationError("Добавьте хотя бы один тег!")
-
-    #     return value
-
-    # def validate_ingredients(self, value):
-    #     if not value:
-    #         raise ValidationError(
-    #             "Добавьте хотя бы один ингредиент!"
-    #         )
-
-    #     ingredients = [item["id"] for item in value]
-    #     for ingredient in ingredients:
-    #         if ingredients.count(ingredient) > 1:
-    #             raise ValidationError(
-    #                 "Рецепт не может включать два одинаковых ингредиента!"
-    #             )
-
-    #     return value
-
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients', [])
