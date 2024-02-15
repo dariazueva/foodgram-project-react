@@ -114,7 +114,7 @@ class AmountIngredientAdmin(ImportExportModelAdmin):
     """Администратор для модели AmountIngredient."""
 
     resource_classes = [AmountIngredientResource]
-    list_display = ('recipe', 'ingredients', 'amount',)
+    list_display = ('recipe', 'ingredient', 'amount',)
     list_editable = ('amount',)
 
 

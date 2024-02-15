@@ -141,11 +141,12 @@ class IngredientSerializer(serializers.ModelSerializer):
 class AmountIngredientSerializer(serializers.ModelSerializer):
     """Сериализатор для модели AmountIngredient."""
 
-    id = serializers.ReadOnlyField(source='ingredients.id')
-    name = serializers.ReadOnlyField(source='ingredients.name')
+    id = serializers.ReadOnlyField(source='ingredient.id')
+    name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
-        source='ingredients.measurement_unit'
+        source='ingredient.measurement_unit'
     )
+    amount = serializers.IntegerField()
 
     class Meta:
         model = AmountIngredient
@@ -156,25 +157,44 @@ class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Recipe."""
 
     image = Base64ImageField()
-    tags = TagSerializer(read_only=True, many=True)
+    tags = TagSerializer(many=True)
     author = CustomUserSerializer(read_only=True)
-    ingredients = AmountIngredientSerializer(read_only=True, many=True)
+    # ingredients = AmountIngredientSerializer(many=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     def get_is_favorited(self, obj):
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            user = request.user
-            return Favorites.objects.filter(user=user, recipe=obj).exists()
-        return False
+        return self._check_item_in_list(obj, Favorites)
 
     def get_is_in_shopping_cart(self, obj):
+        return self._check_item_in_list(obj, Cart)
+
+    def _check_item_in_list(self, obj, model):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             user = request.user
-            return Cart.objects.filter(user=user, recipe=obj).exists()
+            return model.objects.filter(user=user, recipe=obj).exists()
         return False
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['ingredients'] = AmountIngredientSerializer(instance.ingredients.all(), many=True).data
+        return representation
+
+
+    # def get_is_favorited(self, obj):
+    #     request = self.context.get('request')
+    #     if request and request.user.is_authenticated:
+    #         user = request.user
+    #         return Favorites.objects.filter(user=user, recipe=obj).exists()
+    #     return False
+
+    # def get_is_in_shopping_cart(self, obj):
+    #     request = self.context.get('request')
+    #     if request and request.user.is_authenticated:
+    #         user = request.user
+    #         return Cart.objects.filter(user=user, recipe=obj).exists()
+    #     return False
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients', [])
@@ -182,9 +202,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         image_data = validated_data.pop('image', [])
         recipe = Recipe.objects.create(**validated_data)
         for ingredient_data in ingredients_data:
-            Ingredient.objects.create(recipe=recipe, **ingredient_data)
+            Ingredient.objects.create(recipe=recipe, **ingredient_data).save()
         for tag_data in tags_data:
-            Tag.objects.create(recipe=recipe, **tag_data)
+            Tag.objects.create(recipe=recipe, **tag_data).save()
         if image_data:
             recipe.image.save(image_data.name, image_data, save=True)
         return recipe

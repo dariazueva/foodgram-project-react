@@ -56,7 +56,7 @@ class Recipe(models.Model):
         verbose_name='Ингредиенты',
         related_name='recipes',
         blank=False,
-        through='recipes.AmountIngredient'
+        through='AmountIngredient'
     )
     tags = models.ManyToManyField(Tag,
                                   verbose_name='Теги',
@@ -101,11 +101,12 @@ class AmountIngredient(models.Model):
         related_name='recipes',
         on_delete=models.CASCADE,
     )
-    ingredients = models.ForeignKey(
+    ingredient = models.ForeignKey(
         Ingredient,
         verbose_name='Ингредиент',
-        related_name='ingredients',
+        related_name='ingredient',
         on_delete=models.CASCADE,
+        db_column='ingredients_id'
     )
     amount = models.PositiveBigIntegerField(
         verbose_name='Количество',
@@ -119,7 +120,7 @@ class AmountIngredient(models.Model):
         ordering = ('recipe',)
 
     def __str__(self):
-        return f'{self.amount} {self.ingredients}'
+        return f'{self.amount} {self.ingredient}'
 
 
 class Favorites(models.Model):
