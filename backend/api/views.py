@@ -18,7 +18,8 @@ from api.filter import RecipeFilter
 from api.pagination import CustomPaginator
 from api.permissions import AdminOrReadOnly, AuthorAdminOrReadOnly
 from api.serializers import (
-    RecipeSerializer,
+    RecipeGetSerializer,
+    RecipeCreateSerializer,
     TagSerializer,
     IngredientSerializer,
     AddToRecipeSerializer,
@@ -115,22 +116,27 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для управления рецептами."""
 
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
+    # serializer_class = RecipeGetSerializer
     permission_classes = [AuthorAdminOrReadOnly,]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return RecipeGetSerializer
+        return RecipeCreateSerializer
+
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated,])
     def favorite(self, request, pk=None):
-        return self._toggle_list(request, pk, Favorites)
+        return self.add_and_delete(request, pk, Favorites)
 
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated,])
     def shopping_cart(self, request, pk=None):
-        return self._toggle_list(request, pk, Cart)
+        return self.add_and_delete(request, pk, Cart)
 
-    def _toggle_list(self, request, pk, model):
+    def add_and_delete(self, request, pk, model):
         recipe = get_object_or_404(Recipe, id=self.kwargs['pk'])
         serializer = AddToRecipeSerializer(recipe)
         if request.method == 'POST':
@@ -141,7 +147,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             model.objects.create(user=request.user, recipe=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
-            if not model.objects.filter(user=request.user, recipe=recipe).exists():
+            if not model.objects.filter(user=request.user,
+                                        recipe=recipe).exists():
                 return Response({
                     'errors': 'Такого рецепта нет в списке'
                 }, status=status.HTTP_400_BAD_REQUEST)
