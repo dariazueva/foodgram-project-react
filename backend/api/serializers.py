@@ -367,6 +367,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 'Ингредиент(ы) отсутствует(-ют) в базе данных.')
         return value
 
+    def validate_image(self, value):
+        if not value:
+            raise serializers.ValidationError('image - обязательное поле.')
+        return value
+
     # def validate(self, obj):
     #     required_fields = ['name', 'text', 'cooking_time']
     #     for field in required_fields:
@@ -413,28 +418,17 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                                                    instance.cooking_time)
         tags_data = validated_data.pop('tags', [])
         self.validate_tags(tags_data)
-        # image_data = validated_data.get('image', instance.image)
         ingredients_data = validated_data.pop('ingredients', [])
         self.validate_ingredients(ingredients_data)
+        image_data = validated_data.pop('image', None)
+        self.validate_image(image_data)
+        instance.image = image_data
         AmountIngredient.objects.filter(
             recipe=instance,
             ingredient__in=instance.ingredients.all()).delete()
         self.tags_and_ingredients_set(instance, tags_data, ingredients_data)
         instance.save()
         return instance
-
-
-        # for ingredient_data in ingredients_data:
-        #     Ingredient.objects.create(recipe=instance, **ingredient_data)
-        # instance.tags.all().delete()
-        # for tag_data in tags_data:
-        #     Tag.objects.create(recipe=instance, **tag_data)
-        # # if image_data:
-        # #     instance.image.save(image_data.name, image_data, save=True)
-        # elif 'image' in validated_data:
-        #     instance.image.delete()
-        # instance.save()
-        # return instance
 
     def to_representation(self, instance):
         return RecipeGetSerializer(instance, context=self.context).data
