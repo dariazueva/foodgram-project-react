@@ -334,20 +334,58 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'cooking_time': {'required': True},
         }
 
-    def validate(self, obj):
-        required_fields = ['name', 'text', 'cooking_time']
-        for field in required_fields:
-            if not obj.get(field):
-                raise ValidationError(f'{field} - Обязательное поле.')
-        if not obj.get('tags'):
-            raise ValidationError('Нужно указать хотя бы 1 тег.')
-        if not obj.get('ingredients'):
-            raise ValidationError('Нужно указать хотя бы 1 ингредиент.')
-        ingredient_id_list = [item['id'] for item in obj.get('ingredients')]
-        unique_ingredient_id_set = set(ingredient_id_list)
-        if len(ingredient_id_list) != len(unique_ingredient_id_set):
+    def validate_tags(self, value):
+        if not value:
+            raise ValidationError('tags - обязательное поле.')
+        unique_tags = set(value)
+        if len(value) != len(unique_tags):
+            raise ValidationError('Теги должны быть уникальными.')
+        existing_tags = Tag.objects.filter(pk__in=[tag.id for tag in value])
+        if len(existing_tags) != len(value):
+            raise ValidationError('Нужно указать хотя бы 1 существующий тег.')
+        return value
+
+    def validate_ingredients(self, value):
+        if not value:
+            raise ValidationError('Нет ни одного ингредиента.')
+        ingredient_ids = set()
+        for item in value:
+            ingredient_id = item.get('id')
+            amount = item.get('amount')
+            if ingredient_id is None:
+                raise ValidationError(
+                    'Ингредиент должен содержать идентификатор.')
+            if amount is None or amount < 1:
+                raise ValidationError(f'Некорректное количество для '
+                                      f'ингредиента с id {ingredient_id}.')
+            ingredient_ids.add(ingredient_id)
+        if len(ingredient_ids) != len(value):
             raise ValidationError('Ингредиенты должны быть уникальны.')
-        return obj
+        existing_ingredients = Ingredient.objects.filter(pk__in=ingredient_ids)
+        if len(existing_ingredients) != len(ingredient_ids):
+            raise serializers.ValidationError(
+                'Ингредиент(ы) отсутствует(-ют) в базе данных.')
+        return value
+
+    # def validate(self, obj):
+    #     required_fields = ['name', 'text', 'cooking_time']
+    #     for field in required_fields:
+    #         if not obj.get(field):
+    #             raise ValidationError(f'{field} - Обязательное поле.')
+    #     if not obj.get('tags'):
+    #         raise ValidationError('Нужно указать хотя бы 1 тег.')
+    #     if not obj.get('ingredients'):
+    #         raise ValidationError('Нужно указать хотя бы 1 ингредиент.')
+    #     ingredient_id_list = [item['id'] for item in obj.get('ingredients')]
+    #     unique_ingredient_id_set = set(ingredient_id_list)
+    #     if len(ingredient_id_list) != len(unique_ingredient_id_set):
+    #         raise ValidationError('Ингредиенты должны быть уникальны.')
+    #     # tag_id_list = [item['id'] for item in obj.get('tags')]
+    #     # unique_tag_id_set = set(tag_id_list)
+    #     # if len(tag_id_list) != len(unique_tag_id_set):
+    #     #     raise ValidationError(
+    #     #         'Попытка добавить два или более идентичных тега.')
+    #     return obj
 
     def tags_and_ingredients_set(self, recipe, tags, ingredients):
         recipe.tags.set(tags)
@@ -374,10 +412,13 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         instance.cooking_time = validated_data.get('cooking_time',
                                                    instance.cooking_time)
         tags_data = validated_data.pop('tags', [])
+        self.validate_tags(tags_data)
         # image_data = validated_data.get('image', instance.image)
         ingredients_data = validated_data.pop('ingredients', [])
-        AmountIngredient.objects.filter(recipe=instance,
-                                        ingredient__id=instance.ingredients.all()).delete()
+        self.validate_ingredients(ingredients_data)
+        AmountIngredient.objects.filter(
+            recipe=instance,
+            ingredient__in=instance.ingredients.all()).delete()
         self.tags_and_ingredients_set(instance, tags_data, ingredients_data)
         instance.save()
         return instance
