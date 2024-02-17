@@ -116,10 +116,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для управления рецептами."""
 
     queryset = Recipe.objects.all()
-    # serializer_class = RecipeGetSerializer
     permission_classes = [AuthorAdminOrReadOnly,]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+    pagination_class = CustomPaginator
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -154,67 +154,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 }, status=status.HTTP_400_BAD_REQUEST)
             model.objects.filter(user=request.user, recipe=recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-    # @action(detail=True, methods=['post', 'delete'],
-    #         permission_classes=[IsAuthenticated,])
-    # def favorite(self, request, pk=None):
-    #     recipe = get_object_or_404(Recipe, id=self.kwargs['pk'])
-    #     serializer = AddToRecipeSerializer(recipe)
-    #     if request.method == 'POST':
-    #         if Favorites.objects.filter(user=request.user, recipe=recipe).exists():
-    #             return Response({
-    #                 'errors': 'Рецепт уже добавлен в избранное'
-    #             }, status=status.HTTP_400_BAD_REQUEST)
-    #         Favorites.objects.create(user=request.user, recipe=recipe)
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     if request.method == 'DELETE':
-    #         if not Favorites.objects.filter(user=request.user, recipe=recipe).exists():
-    #             return Response({
-    #                 'errors': 'Такого рецепта нет в избранном'
-    #             }, status=status.HTTP_400_BAD_REQUEST)
-    #         Favorites.objects.filter(user=request.user, recipe=recipe).delete()
-    #         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    # @action(detail=True, methods=['post', 'delete'],
-    #         permission_classes=[IsAuthenticated,])
-    # def shopping_cart(self, request, pk=None):
-    #     recipe = get_object_or_404(Recipe, id=self.kwargs['pk'])
-    #     serializer = AddToRecipeSerializer(recipe)
-    #     if request.method == 'POST':
-    #         if Cart.objects.filter(user=request.user, recipe=recipe).exists():
-    #             return Response({
-    #                 'errors': 'Рецепт уже добавлен в список'
-    #             }, status=status.HTTP_400_BAD_REQUEST)
-    #         Cart.objects.create(user=request.user, recipe=recipe)
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     if request.method == 'DELETE':
-    #         if not Cart.objects.filter(user=request.user,
-    #                                    recipe=recipe).exists():
-    #             return Response({
-    #                 'errors': ' Такого рецепта нет в списке'
-    #             }, status=status.HTTP_400_BAD_REQUEST)
-    #         Cart.objects.filter(user=request.user, recipe=recipe).delete()
-    #         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    # @action(detail=False, methods=['get'],
-    #         permission_classes=[IsAuthenticated,])
-    # def download_shopping_cart(self, request):
-    #     user = request.user
-    #     recipes_in_cart = Cart.objects.filter(user=user)
-    #     response = HttpResponse(content_type='text/csv; charset=utf-8')
-    #     response['Content-Disposition'] = 'attachment; '
-    #     'filename="shopping_cart.csv"'
-    #     writer = csv.writer(response)
-    #     writer.writerow(['Recipe Name', 'Ingredients', 'Cooking Time'])
-    #     for recipe in recipes_in_cart:
-    #         ingredients = ', '.join(
-    #             [f'{amount_ingredient.amount}'
-    #              '{amount_ingredient.ingredients.name}'
-    #              for amount_ingredient in recipe.ingredients.all()]
-    #         )
-    #         writer.writerow([recipe.name, ingredients, recipe.cooking_time])
-    #     return response
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
