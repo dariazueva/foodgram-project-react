@@ -61,20 +61,20 @@ class CustomUserSerializer(UserSerializer):
 
     def validate_email(self, value):
         if CustomUser.objects.filter(email=value).exists():
-            raise serializers.ValidationError('Пользователь с таким email уже зарегистрирован')
+            raise ValidationError('Пользователь с таким email уже зарегистрирован')
         return value
 
     def validate_username(self, value):
         pattern = r'^[\w.@+-]+$'
         if not re.match(pattern, value):
-            raise serializers.ValidationError('Некорректное имя пользователя')
+            raise ValidationError('Некорректное имя пользователя')
         return value
 
 
 class AddToRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для добавления в список покупок и в избранное рецептов."""
 
-    image = Base64ImageField
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
@@ -82,8 +82,8 @@ class AddToRecipeSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class SubscribeSerializer(CustomUserSerializer):
-    """Сериализатор для модели Subscriptions."""
+class SubscriptionsSerializer(CustomUserSerializer):
+    """Сериализатор для получения информации о подписках."""
 
     id = serializers.ReadOnlyField(source='author.id')
     email = serializers.ReadOnlyField(source='author.email')
@@ -113,13 +113,14 @@ class SubscribeSerializer(CustomUserSerializer):
             return Subscriptions.objects.filter(user=user, author=obj).exists()
         return False
 
+    def get_recipes(self, obj):
+        user = obj.user
+        if user.is_authenticated:
+            recipes_queryset = user.recipes.all()
+            return RecipeGetSerializer(recipes_queryset, many=True).data
+
     def get_recipes_count(self, obj):
         return obj.user.recipes.count()
-
-    def get_recipes(self, obj):
-        if isinstance(obj, CustomUser):
-            recipes = Recipe.objects.filter(author=obj)
-            return RecipeGetSerializer(recipes, many=True, read_only=True).data
 
 
 class TagSerializer(serializers.ModelSerializer):
