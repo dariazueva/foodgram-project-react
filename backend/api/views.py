@@ -58,11 +58,15 @@ class CustomUserViewSet(UserViewSet):
             return Response({'Нельзя подписаться на самого себя'},
                             status=status.HTTP_400_BAD_REQUEST)
         if request.method == 'POST':
-            subscription, created = Subscriptions.objects.get_or_create(user=user, author=author)
+            subscription, created = Subscriptions.objects.get_or_create(
+                user=user, author=author
+            )
             if created:
                 serializer = SubscriptionsSerializer(
                     subscription,
-                    context={'request': request})
+                    context={'request': request},
+                    is_subscribed=True
+                )
                 return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
             else:
@@ -88,14 +92,6 @@ class CustomUserViewSet(UserViewSet):
         serializer = SubscriptionsSerializer(page, many=True,
                                              context={'request': request})
         return self.get_paginated_response(serializer.data)
-
-    # def get_recipes(self, obj):
-    #     request = self.context.get('request')
-    #     limit = request.GET.get('recipes_limit')
-    #     recipes = obj.recipes.all()[:int(limit)] if limit else obj.recipes.all()
-    #     serializer = AddToRecipeSerializer(recipes, many=True, read_only=True,
-    #                                        context=self.context)
-    #     return serializer.data
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

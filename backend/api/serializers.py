@@ -47,21 +47,23 @@ class CustomUserSerializer(UserSerializer):
         return super(UserSerializer, self).create(validated_data)
 
     def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            user = request.user
+        user = self.context['request'].user
+        if user.is_authenticated and isinstance(obj, CustomUser):
             return Subscriptions.objects.filter(user=user, author=obj).exists()
         return False
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if self.context['request'].method == 'POST':
+        request = self.context.get('request')
+        if request and request.method == 'POST':
             data.pop('is_subscribed', None)
         return data
 
     def validate_email(self, value):
         if CustomUser.objects.filter(email=value).exists():
-            raise ValidationError('Пользователь с таким email уже зарегистрирован')
+            raise ValidationError(
+                'Пользователь с таким email уже зарегистрирован'
+            )
         return value
 
     def validate_username(self, value):
@@ -90,7 +92,7 @@ class SubscriptionsSerializer(CustomUserSerializer):
     username = serializers.ReadOnlyField(source='author.username')
     first_name = serializers.ReadOnlyField(source='author.first_name')
     last_name = serializers.ReadOnlyField(source='author.last_name')
-    is_subscribed = serializers.SerializerMethodField()
+    # is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
@@ -107,17 +109,26 @@ class SubscriptionsSerializer(CustomUserSerializer):
             'recipes_count'
         )
 
-    def get_is_subscribed(self, obj):
-        user = self.context['request'].user
-        if user.is_authenticated and isinstance(obj, CustomUser):
-            return Subscriptions.objects.filter(user=user, author=obj).exists()
-        return False
+    def __init__(self, *args, is_subscribed=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.is_subscribed = is_subscribed
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['is_subscribed'] = self.is_subscribed
+        return data
+
+    # def get_is_subscribed(self, obj):
+    #     user = self.context['request'].user
+    #     if user.is_authenticated and isinstance(obj, CustomUser):
+    #         return Subscriptions.objects.filter(user=user, author=obj).exists()
+    #     return False
 
     def get_recipes(self, obj):
         user = obj.user
         if user.is_authenticated:
             recipes_queryset = user.recipes.all()
-            return RecipeGetSerializer(recipes_queryset, many=True).data
+            return AddToRecipeSerializer(recipes_queryset, many=True).data
 
     def get_recipes_count(self, obj):
         return obj.user.recipes.count()
