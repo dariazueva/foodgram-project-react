@@ -27,7 +27,8 @@ class Command(BaseCommand):
     help = 'Загрузка ингредиентов и тегов в бд.'
 
     def handle(self, *args, **options):
-        ingredient_path = os.path.join(settings.BASE_DIR, 'data/ingredients.csv')
+        ingredient_path = os.path.join(settings.BASE_DIR,
+                                       'data/ingredients.csv')
         with open(ingredient_path, 'r', encoding='utf-8') as file:
             ingredient_reader = csv.reader(file)
             ingredient_row_count = sum(1 for row in ingredient_reader)
