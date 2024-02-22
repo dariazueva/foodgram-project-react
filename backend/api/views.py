@@ -1,39 +1,26 @@
 import csv
+
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from rest_framework import viewsets, status, filters
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.permissions import (
-    IsAuthenticatedOrReadOnly,
-    IsAuthenticated
-)
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
-
 
 from api.filter import RecipeFilter
 from api.pagination import CustomPaginator
 from api.permissions import AdminOrReadOnly, AuthorAdminOrReadOnly
-from api.serializers import (
-    RecipeGetSerializer,
-    RecipeCreateSerializer,
-    TagSerializer,
-    IngredientSerializer,
-    AddToRecipeSerializer,
-    SubscriptionsSerializer,
-    CustomUserSerializer,
-)
-from recipes.models import (
-    Recipe,
-    Tag,
-    Ingredient,
-    Favorites,
-    Cart,
-    AmountIngredient,
-)
+from api.serializers import (AddToRecipeSerializer, CustomUserSerializer,
+                             IngredientSerializer, RecipeCreateSerializer,
+                             RecipeGetSerializer, SubscriptionsSerializer,
+                             TagSerializer)
+from recipes.models import (AmountIngredient, Cart, Favorites, Ingredient,
+                            Recipe, Tag)
 from users.models import CustomUser, Subscriptions
 
 
@@ -46,7 +33,8 @@ class CustomUserViewSet(UserViewSet):
     @action(detail=False, methods=['get'],
             permission_classes=(IsAuthenticated,))
     def me(self, request):
-        serializer = CustomUserSerializer(request.user, context={'request': request})
+        serializer = CustomUserSerializer(request.user,
+                                          context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post', 'delete'],
@@ -55,7 +43,7 @@ class CustomUserViewSet(UserViewSet):
         user = request.user
         author = get_object_or_404(CustomUser, pk=self.kwargs['id'])
         if user == author:
-            return Response({'Нельзя подписаться на самого себя'},
+            return Response({'Нельзя подписаться на самого себя.'},
                             status=status.HTTP_400_BAD_REQUEST)
         if request.method == 'POST':
             subscription, created = Subscriptions.objects.get_or_create(
@@ -70,7 +58,7 @@ class CustomUserViewSet(UserViewSet):
                 return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
             else:
-                return Response({'Вы уже подписаны на данного пользователя'},
+                return Response({'Вы уже подписаны на данного пользователя.'},
                                 status=status.HTTP_400_BAD_REQUEST)
         elif request.method == 'DELETE':
             subscription = Subscriptions.objects.filter(user=user,
@@ -79,9 +67,8 @@ class CustomUserViewSet(UserViewSet):
                 subscription.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             else:
-                return Response({'Вы не подписаны на данного пользователя'},
+                return Response({'Вы не подписаны на данного пользователя.'},
                                 status=status.HTTP_400_BAD_REQUEST)
-
 
     @action(detail=False, methods=['get'],
             permission_classes=(IsAuthenticated,))
@@ -149,11 +136,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
             try:
                 recipe = Recipe.objects.get(id=self.kwargs['pk'])
             except Recipe.DoesNotExist:
-                return Response({'Такого рецепта не существует'},
+                return Response({'Такого рецепта не существует.'},
                                 status=status.HTTP_400_BAD_REQUEST)
             serializer = AddToRecipeSerializer(recipe)
             if model.objects.filter(user=request.user, recipe=recipe).exists():
-                return Response({'Рецепт уже добавлен в список'},
+                return Response({'Рецепт уже добавлен в список.'},
                                 status=status.HTTP_400_BAD_REQUEST)
             model.objects.create(user=request.user, recipe=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -161,7 +148,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe = get_object_or_404(Recipe, id=self.kwargs['pk'])
             if not model.objects.filter(user=request.user,
                                         recipe=recipe).exists():
-                return Response({'Такого рецепта нет в списке'},
+                return Response({'Такого рецепта нет в списке.'},
                                 status=status.HTTP_400_BAD_REQUEST)
             model.objects.filter(user=request.user, recipe=recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -194,9 +181,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 'amount': amount
             }
         response = HttpResponse(content_type='text/csv; charset=utf-8')
-        response['Content-Disposition'] = 'attachment; filename="shopping_cart.csv"'
+        response['Content-Disposition'] = 'attachment; '
+        'filename="shopping_cart.csv"'
         writer = csv.writer(response)
-        writer.writerow(['Наименование ингредиента', 'Единица измерения', 'Количество'])
+        writer.writerow(['Наименование ингредиента', 'Единица измерения',
+                         'Количество'])
         for ingredient, info in final_list.items():
-            writer.writerow([ingredient, info['measurement_unit'], info['amount']])
+            writer.writerow([ingredient, info['measurement_unit'],
+                             info['amount']])
         return response

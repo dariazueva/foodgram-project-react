@@ -1,14 +1,7 @@
 from django.contrib import admin
 
-from recipes.models import (
-    Recipe,
-    Tag,
-    Ingredient,
-    Cart,
-    Favorites,
-    AmountIngredient
-)
-
+from recipes.models import (AmountIngredient, Cart, Favorites, Ingredient,
+                            Recipe, Tag)
 
 admin.site.empty_value_display = 'Не задано'
 
@@ -40,6 +33,7 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display_links = ('name',)
     inlines = (IngredientInline,)
 
+    @admin.display(description='В избранном')
     def count_favorites(self, obj: Recipe):
         return obj.favorite_recipe.count()
 

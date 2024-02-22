@@ -14,8 +14,11 @@ djangorestframework==3.14.0
 djangorestframework-simplejwt==5.3.1
 djoser==2.2.2
 et-xmlfile==1.1.0
+flake8==7.0.0
 idna==3.6
+isort==5.13.2
 MarkupPy==1.14
+mccabe==0.7.0
 oauthlib==3.2.2
 odfpy==1.4.1
 openpyxl==3.1.2
@@ -23,8 +26,11 @@ pillow==10.2.0
 progress==1.6
 psycopg2==2.9.9
 psycopg2-binary==2.9.9
+pycodestyle==2.11.1
 pycparser==2.21
+pyflakes==3.2.0
 PyJWT==2.8.0
+python-dotenv==1.0.1
 python3-openid==3.2.0
 pytz==2023.3.post1
 PyYAML==6.0.1

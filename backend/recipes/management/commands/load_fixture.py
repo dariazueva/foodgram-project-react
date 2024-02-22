@@ -1,8 +1,10 @@
 import csv
 import os
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from progress.bar import IncrementalBar
+
 from recipes.models import Ingredient, Tag
 
 
@@ -22,23 +24,24 @@ def tag_create(row):
 
 
 class Command(BaseCommand):
-    help = 'Load ingredients and tags to DB'
+    help = 'Загрузка ингредиентов и тегов в бд.'
 
     def handle(self, *args, **options):
-        ingredient_path = os.path.join(settings.BASE_DIR, 'ingredients.csv')
+        ingredient_path = os.path.join(settings.BASE_DIR, 'data/ingredients.csv')
         with open(ingredient_path, 'r', encoding='utf-8') as file:
             ingredient_reader = csv.reader(file)
             ingredient_row_count = sum(1 for row in ingredient_reader)
         with open(ingredient_path, 'r', encoding='utf-8') as file:
             ingredient_reader = csv.reader(file)
-            ingredient_bar = IncrementalBar('ingredients.csv'.ljust(17), max=ingredient_row_count)
+            ingredient_bar = IncrementalBar('ingredients.csv'.ljust(17),
+                                            max=ingredient_row_count)
             next(ingredient_reader)
             for row in ingredient_reader:
                 ingredient_bar.next()
                 ingredient_create(row)
             ingredient_bar.finish()
 
-        tag_path = os.path.join(settings.BASE_DIR, 'tags.csv')
+        tag_path = os.path.join(settings.BASE_DIR, 'data/tags.csv')
         with open(tag_path, 'r', encoding='utf-8') as file:
             tag_reader = csv.reader(file)
             tag_row_count = sum(1 for row in tag_reader)
@@ -51,4 +54,4 @@ class Command(BaseCommand):
                 tag_create(row)
             tag_bar.finish()
 
-        self.stdout.write('The ingredients and tags have been loaded successfully.')
+        self.stdout.write('Ингредиенты и теги успешно загружены.')

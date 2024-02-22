@@ -1,19 +1,13 @@
 import re
+
 from django.contrib.auth.hashers import make_password
-from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from recipes.models import (
-    Recipe,
-    Tag,
-    Ingredient,
-    AmountIngredient,
-    Favorites,
-    Cart
-)
+from recipes.models import (AmountIngredient, Cart, Favorites, Ingredient,
+                            Recipe, Tag)
 from users.models import CustomUser, Subscriptions
 
 
@@ -62,14 +56,14 @@ class CustomUserSerializer(UserSerializer):
     def validate_email(self, value):
         if CustomUser.objects.filter(email=value).exists():
             raise ValidationError(
-                'Пользователь с таким email уже зарегистрирован'
+                'Пользователь с таким email уже зарегистрирован.'
             )
         return value
 
     def validate_username(self, value):
         pattern = r'^[\w.@+-]+$'
         if not re.match(pattern, value):
-            raise ValidationError('Некорректное имя пользователя')
+            raise ValidationError('Некорректное имя пользователя.')
         return value
 
 
@@ -92,7 +86,6 @@ class SubscriptionsSerializer(CustomUserSerializer):
     username = serializers.ReadOnlyField(source='author.username')
     first_name = serializers.ReadOnlyField(source='author.first_name')
     last_name = serializers.ReadOnlyField(source='author.last_name')
-    # is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
@@ -117,12 +110,6 @@ class SubscriptionsSerializer(CustomUserSerializer):
         data = super().to_representation(instance)
         data['is_subscribed'] = self.is_subscribed
         return data
-
-    # def get_is_subscribed(self, obj):
-    #     user = self.context['request'].user
-    #     if user.is_authenticated and isinstance(obj, CustomUser):
-    #         return Subscriptions.objects.filter(user=user, author=obj).exists()
-    #     return False
 
     def get_recipes(self, obj):
         user = obj.user
