@@ -297,9 +297,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         self.validate_tags(tags_data)
         ingredients_data = validated_data.pop('ingredients', [])
         self.validate_ingredients(ingredients_data)
-        image_data = validated_data.pop('image', None)
-        self.validate_image(image_data)
-        instance.image = image_data
         AmountIngredient.objects.filter(
             recipe=instance,
             ingredient__in=instance.ingredients.all()).delete()
