@@ -3,11 +3,10 @@ import re
 from django.contrib.auth.hashers import make_password
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
-
 from recipes.models import (AmountIngredient, Cart, Favorites, Ingredient,
                             Recipe, Tag)
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from users.models import CustomUser, Subscriptions
 
 

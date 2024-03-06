@@ -1,17 +1,5 @@
 import csv
 
-from django.db.models import Sum
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet
-from rest_framework import filters, status, viewsets
-from rest_framework.decorators import action
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.permissions import (IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
-from rest_framework.response import Response
-
 from api.filter import RecipeFilter
 from api.pagination import CustomPaginator
 from api.permissions import AdminOrReadOnly, AuthorAdminOrReadOnly
@@ -19,15 +7,26 @@ from api.serializers import (AddToRecipeSerializer, CustomUserSerializer,
                              IngredientSerializer, RecipeCreateSerializer,
                              RecipeGetSerializer, SubscriptionsSerializer,
                              TagSerializer)
+from django.db.models import Sum
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet
 from recipes.models import (AmountIngredient, Cart, Favorites, Ingredient,
                             Recipe, Tag)
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
 from users.models import CustomUser, Subscriptions
 
 
 class CustomUserViewSet(UserViewSet):
     """ViewSet для управления пользовательскими данными."""
 
-    permission_classes = [IsAuthenticatedOrReadOnly,]
+    permission_classes = [IsAuthenticatedOrReadOnly, ]
     pagination_class = CustomPaginator
 
     @action(detail=False, methods=['get'],
@@ -38,7 +37,7 @@ class CustomUserViewSet(UserViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post', 'delete'],
-            permission_classes=[IsAuthenticated,])
+            permission_classes=[IsAuthenticated, ])
     def subscribe(self, request, **kwargs):
         user = request.user
         author = get_object_or_404(CustomUser, pk=self.kwargs['id'])
@@ -86,7 +85,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = [AdminOrReadOnly,]
+    permission_classes = [AdminOrReadOnly, ]
     pagination_class = None
 
 
@@ -111,7 +110,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для управления рецептами."""
 
     queryset = Recipe.objects.all()
-    permission_classes = [AuthorAdminOrReadOnly,]
+    permission_classes = [AuthorAdminOrReadOnly, ]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     pagination_class = CustomPaginator
@@ -122,12 +121,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return RecipeCreateSerializer
 
     @action(detail=True, methods=['post', 'delete'],
-            permission_classes=[IsAuthenticated,])
+            permission_classes=[IsAuthenticated, ])
     def favorite(self, request, pk=None):
         return self.add_and_delete(request, pk, Favorites)
 
     @action(detail=True, methods=['post', 'delete'],
-            permission_classes=[IsAuthenticated,])
+            permission_classes=[IsAuthenticated, ])
     def shopping_cart(self, request, pk=None):
         return self.add_and_delete(request, pk, Cart)
 

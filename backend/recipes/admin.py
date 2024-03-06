@@ -1,5 +1,4 @@
 from django.contrib import admin
-
 from recipes.models import (AmountIngredient, Cart, Favorites, Ingredient,
                             Recipe, Tag)
 
@@ -22,7 +21,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'text',
         'image',
         'count_favorites',
-        )
+    )
     list_filter = ('name', 'author__username', 'tags__name',)
     list_editable = (
         'cooking_time',
