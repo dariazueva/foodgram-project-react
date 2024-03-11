@@ -132,5 +132,9 @@ dmypy.json
 .idea
 
 media/
-app/
+media_value/
+static/
+static_value/
+staticfiles/
+backend_static/
 .vscode/
