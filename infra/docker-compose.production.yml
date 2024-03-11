@@ -18,6 +18,8 @@ services:
     volumes:
       - static_volume:/backend_static
       - media_volume:/app/media/
+    depends_on:
+      - db
 
   frontend:
     build:
@@ -38,4 +40,5 @@ services:
       - media_volume:/app/media/
     depends_on:
       - frontend
+      - backend
 
