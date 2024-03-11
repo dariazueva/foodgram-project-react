@@ -40,4 +40,4 @@ services:
       - media:/app/media/
     depends_on:
       - frontend
-
+      - backend
