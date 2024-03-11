@@ -130,6 +130,12 @@ dmypy.json
 
 # .idea
 .idea
+.DS_Store
+.AppleDouble
+.LSOverride
+
+*.sublime-project
+*.sublime-workspace
 
 media/
 media_value/
@@ -138,3 +144,6 @@ static_value/
 staticfiles/
 backend_static/
 .vscode/
+*.code-workspace
+node_modules
+.history/
