@@ -84,6 +84,7 @@ class CustomUserViewSet(UserViewSet):
                                              context={'request': request})
         return self.get_paginated_response(serializer.data)
 
+
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet для управления тегами."""
 
@@ -133,7 +134,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == 'POST':
             return self.add_to_cart(request, pk)
         elif request.method == 'DELETE':
-            return self.remove_from_cart(request,pk)
+            return self.remove_from_cart(request, pk)
 
     def add_to_cart(self, request, pk):
         try:
@@ -152,7 +153,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def remove_from_cart(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         if not Cart.objects.filter(user=request.user,
-                                    recipe=recipe).exists():
+                                   recipe=recipe).exists():
             return Response({'There is no recipe in list.'},
                             status=status.HTTP_400_BAD_REQUEST)
         Cart.objects.filter(user=request.user, recipe=recipe).delete()
