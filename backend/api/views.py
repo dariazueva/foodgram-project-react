@@ -1,3 +1,4 @@
+
 import csv
 
 from django.db.models import Sum
@@ -126,37 +127,39 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated, ])
     def favorite(self, request, pk=None):
-        return self.add_and_delete(request, pk, Favorites)
+        if request.method == 'POST':
+            return self.add_to_list(request, pk, Favorites)
+        elif request.method == 'DELETE':
+            return self.remove_from_list(request, pk, Favorites)
 
-    @action(detail=True, methods=['post'],
+    @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated, ])
     def shopping_cart(self, request, pk=None):
         if request.method == 'POST':
-            return self.add_to_cart(request, pk)
+            return self.add_to_list(request, pk, Cart)
         elif request.method == 'DELETE':
-            return self.remove_from_cart(request, pk)
+            return self.remove_from_list(request, pk, Cart)
 
-    def add_to_cart(self, request, pk):
+    def add_to_list(self, request, pk, model):
         try:
             recipe = Recipe.objects.get(id=pk)
         except Recipe.DoesNotExist:
             return Response({'There is no recipe like that.'},
                             status=status.HTTP_400_BAD_REQUEST)
         serializer = AddToRecipeSerializer(recipe)
-        if Cart.objects.filter(user=request.user, recipe=recipe).exists():
+        if model.objects.filter(user=request.user, recipe=recipe).exists():
             return Response({'There is the recipe in list.'},
                             status=status.HTTP_400_BAD_REQUEST)
-        Cart.objects.create(user=request.user, recipe=recipe)
+        model.objects.create(user=request.user, recipe=recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @shopping_cart.mapping.delete
-    def remove_from_cart(self, request, pk):
+    def remove_from_list(self, request, pk, model):
         recipe = get_object_or_404(Recipe, id=pk)
-        if not Cart.objects.filter(user=request.user,
+        if not model.objects.filter(user=request.user,
                                    recipe=recipe).exists():
             return Response({'There is no recipe in list.'},
                             status=status.HTTP_400_BAD_REQUEST)
-        Cart.objects.filter(user=request.user, recipe=recipe).delete()
+        model.objects.filter(user=request.user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def perform_create(self, serializer):
