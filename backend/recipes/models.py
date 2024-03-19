@@ -1,16 +1,15 @@
-from colorfield.fields import ColorField
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
 from recipes.constants import (INGREDIENT_NAME_MAX,
-                              MEASUREMENT_UNIT_MAX,
-                              TAG_NAME_MAX,
-                              COLOR_NAME_MAX,
-                              TAG_SLUG_MAX,
-                              RECIPE_NAME_MAX,
-                              COOKING_TIME_DEFAULT,
-                              AMOUNT_DEFAULT)
+                               MEASUREMENT_UNIT_MAX,
+                               TAG_NAME_MAX,
+                               COLOR_NAME_MAX,
+                               TAG_SLUG_MAX,
+                               RECIPE_NAME_MAX,
+                               COOKING_TIME_DEFAULT,
+                               AMOUNT_DEFAULT)
 
 User = get_user_model()
 
@@ -19,7 +18,8 @@ class Ingredient(models.Model):
     """Модель 'Ингредиент'."""
 
     name = models.CharField('Ingredient', max_length=INGREDIENT_NAME_MAX)
-    measurement_unit = models.CharField('Measurement_unit', max_length=MEASUREMENT_UNIT_MAX)
+    measurement_unit = models.CharField('Measurement_unit',
+                                        max_length=MEASUREMENT_UNIT_MAX)
 
     class Meta:
         verbose_name = 'Ингредиент'
@@ -40,7 +40,7 @@ class Tag(models.Model):
     """Модель 'Тег'."""
 
     name = models.CharField('Tag', max_length=TAG_NAME_MAX, unique=True)
-    color = ColorField(
+    color = models.CharField(
         'Цвет',
         max_length=COLOR_NAME_MAX,
         unique=True,
@@ -141,7 +141,6 @@ class AmountIngredient(models.Model):
             ),
         )
 
-
     def __str__(self):
         return f'{self.amount} {self.ingredient}'
 
@@ -162,7 +161,7 @@ class BaseListModel(models.Model):
         related_name='%(class)s_user',
     )
     pub_date = models.DateTimeField(
-       'Publication date',
+        'Publication date',
         auto_now_add=True,
     )
 

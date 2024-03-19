@@ -156,7 +156,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def remove_from_list(self, request, pk, model):
         recipe = get_object_or_404(Recipe, id=pk)
         if not model.objects.filter(user=request.user,
-                                   recipe=recipe).exists():
+                                    recipe=recipe).exists():
             return Response({'There is no recipe in list.'},
                             status=status.HTTP_400_BAD_REQUEST)
         model.objects.filter(user=request.user, recipe=recipe).delete()
@@ -173,7 +173,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         final_list = {}
         ingredient = AmountIngredient.objects.filter(
-            recipe__in_cart__user=request.user
+            recipe__cart_recipe__user=request.user
         ).values_list(
             'ingredient__name', 'ingredient__measurement_unit'
         ).annotate(total_amount=Sum('amount'))
