@@ -8,6 +8,7 @@ from users.constants import (USER_USERNAME_MAX,
 
 class CustomUser(AbstractUser):
     """Модель 'Пользователь'."""
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
@@ -17,8 +18,8 @@ class CustomUser(AbstractUser):
         unique=True
     )
     email = models.EmailField('Email', max_length=USER_EMAIL_MAX,
-                               unique=True)
-    first_name = models.CharField('First name', max_length=150, blank=True)
+                              unique=True)
+    first_name = models.CharField('First name', max_length=FIRST_NAME_MAXs, blank=True)
     last_name = models.CharField('Last name', max_length=LAST_NAME_MAX,
                                  blank=True)
 
@@ -55,7 +56,7 @@ class Subscriptions(models.Model):
                 fields=('author', 'user'),
                 name='unique_for_author',
             ),
-    )
+        )
 
     def __str__(self):
         return f'{self.user.username} - {self.author.username}'
