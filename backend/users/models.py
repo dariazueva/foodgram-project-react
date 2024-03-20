@@ -6,9 +6,9 @@ from users.constants import (USER_USERNAME_MAX,
                              FIRST_NAME_MAX,
                              LAST_NAME_MAX)
 
+
 class CustomUser(AbstractUser):
     """Модель 'Пользователь'."""
-
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
