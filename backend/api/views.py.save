@@ -128,24 +128,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk=None):
         if request.method == 'POST':
             return self.add_to_list(request, pk, Favorites)
-#        elif request.method == 'DELETE':
-#            return self.remove_from_list(request, pk, Favorites)
+        elif request.method == 'DELETE':
+            return self.remove_from_list(request, pk, Favorites)
 
     @action(detail=True, methods=['post'],
             permission_classes=[IsAuthenticated, ])
     def shopping_cart(self, request, pk=None):
         if request.method == 'POST':
             return self.add_to_list(request, pk, Cart)
-#        elif request.method == 'DELETE':
-#            return self.remove_from_list(request, pk, Cart)
-
-    @favorite.mapping.delete
-    def remove_from_favorites(self, request, pk=None):
-        return self.remove_from_list(request, pk, Favorites)
-
-    @shopping_cart.mapping.delete
-    def remove_from_cart(self, request, pk=None):
-        return self.remove_from_list(request, pk, Cart)
+        elif request.method == 'DELETE':
+            return self.remove_from_list(request, pk, Cart)
 
     def add_to_list(self, request, pk, model):
         try:
@@ -160,7 +152,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         model.objects.create(user=request.user, recipe=recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def remove_from_list(self, request, pk, model):
+    @favorite.mapping.delete
+    @shopping_cart.mapping.delete
+    def remove_from_list(self, request, pk=None, model=None):
         recipe = get_object_or_404(Recipe, id=pk)
         if not model.objects.filter(user=request.user,
                                     recipe=recipe).exists():
@@ -187,7 +181,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         for item in ingredient:
             if len(item) == 2:
                 name, measurement_unit = item
-                amount = 0
+               amount = 0
             elif len(item) == 3:
                 name, measurement_unit, amount = item
             else:
