@@ -43,7 +43,7 @@ class CustomUserViewSet(UserViewSet):
         user = request.user
         author = get_object_or_404(CustomUser, pk=self.kwargs['id'])
         if user == author:
-            return Response({''Нельзя подписаться на самого себя.'},
+            return Response({'Нельзя подписаться на самого себя.'},
                             status=status.HTTP_400_BAD_REQUEST)
         if request.method == 'POST':
             subscription, created = Subscriptions.objects.get_or_create(
