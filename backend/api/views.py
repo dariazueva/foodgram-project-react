@@ -43,7 +43,7 @@ class CustomUserViewSet(UserViewSet):
         user = request.user
         author = get_object_or_404(CustomUser, pk=self.kwargs['id'])
         if user == author:
-            return Response({'You can not subscribe yourself.'},
+            return Response({''Нельзя подписаться на самого себя.'},
                             status=status.HTTP_400_BAD_REQUEST)
         if request.method == 'POST':
             subscription, created = Subscriptions.objects.get_or_create(
@@ -58,7 +58,7 @@ class CustomUserViewSet(UserViewSet):
                 return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
             else:
-                return Response({'You are already subscribed this account.'},
+                return Response({'Вы уже подписаны на данного пользователя.'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
     @subscribe.mapping.delete
@@ -71,7 +71,7 @@ class CustomUserViewSet(UserViewSet):
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
-            return Response({'You are not subscribing this account.'},
+            return Response({'Вы не подписаны на данного пользователя.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'],
@@ -128,16 +128,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk=None):
         if request.method == 'POST':
             return self.add_to_list(request, pk, Favorites)
-#        elif request.method == 'DELETE':
-#            return self.remove_from_list(request, pk, Favorites)
 
     @action(detail=True, methods=['post'],
             permission_classes=[IsAuthenticated, ])
     def shopping_cart(self, request, pk=None):
         if request.method == 'POST':
             return self.add_to_list(request, pk, Cart)
-#        elif request.method == 'DELETE':
-#            return self.remove_from_list(request, pk, Cart)
 
     @favorite.mapping.delete
     def remove_from_favorites(self, request, pk=None):
@@ -151,11 +147,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         try:
             recipe = Recipe.objects.get(id=pk)
         except Recipe.DoesNotExist:
-            return Response({'There is no recipe like that.'},
+            return Response({'Такого рецепта не существует.'},
                             status=status.HTTP_400_BAD_REQUEST)
         serializer = AddToRecipeSerializer(recipe)
         if model.objects.filter(user=request.user, recipe=recipe).exists():
-            return Response({'There is the recipe in list.'},
+            return Response({'Рецепт уже добавлен в список.'},
                             status=status.HTTP_400_BAD_REQUEST)
         model.objects.create(user=request.user, recipe=recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -164,7 +160,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, id=pk)
         if not model.objects.filter(user=request.user,
                                     recipe=recipe).exists():
-            return Response({'There is no recipe in list.'},
+            return Response({'Такого рецепта нет в списке.'},
                             status=status.HTTP_400_BAD_REQUEST)
         model.objects.filter(user=request.user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
