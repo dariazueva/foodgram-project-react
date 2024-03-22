@@ -18,8 +18,8 @@ class CustomUser(AbstractUser):
         max_length=USER_USERNAME_MAX,
         unique=True
     )
-    email = models.EmailField('Адрес электронной почты', max_length=USER_EMAIL_MAX,
-                              unique=True)
+    email = models.EmailField('Адрес электронной почты',
+                              max_length=USER_EMAIL_MAX, unique=True)
     first_name = models.CharField('Имя', max_length=FIRST_NAME_MAX,
                                   blank=True)
     last_name = models.CharField('Фамилия', max_length=LAST_NAME_MAX,
