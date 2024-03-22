@@ -18,11 +18,11 @@ class CustomUser(AbstractUser):
         max_length=USER_USERNAME_MAX,
         unique=True
     )
-    email = models.EmailField('Email', max_length=USER_EMAIL_MAX,
+    email = models.EmailField('Адрес электронной почты', max_length=USER_EMAIL_MAX,
                               unique=True)
-    first_name = models.CharField('First name', max_length=FIRST_NAME_MAX,
+    first_name = models.CharField('Имя', max_length=FIRST_NAME_MAX,
                                   blank=True)
-    last_name = models.CharField('Last name', max_length=LAST_NAME_MAX,
+    last_name = models.CharField('Фамилия', max_length=LAST_NAME_MAX,
                                  blank=True)
 
     class Meta:
