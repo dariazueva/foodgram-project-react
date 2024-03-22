@@ -17,8 +17,8 @@ User = get_user_model()
 class Ingredient(models.Model):
     """Модель 'Ингредиент'."""
 
-    name = models.CharField('Ingredient', max_length=INGREDIENT_NAME_MAX)
-    measurement_unit = models.CharField('Measurement_unit',
+    name = models.CharField('Ингредиент', max_length=INGREDIENT_NAME_MAX)
+    measurement_unit = models.CharField('Единица измерения',
                                         max_length=MEASUREMENT_UNIT_MAX)
 
     class Meta:
@@ -39,13 +39,13 @@ class Ingredient(models.Model):
 class Tag(models.Model):
     """Модель 'Тег'."""
 
-    name = models.CharField('Tag', max_length=TAG_NAME_MAX, unique=True)
+    name = models.CharField('Тег', max_length=TAG_NAME_MAX, unique=True)
     color = models.CharField(
         'Цвет',
         max_length=COLOR_NAME_MAX,
         unique=True,
         validators=[RegexValidator(regex='^#([a-fA-F0-9]{6})',)])
-    slug = models.SlugField('Slug', max_length=TAG_SLUG_MAX, unique=True)
+    slug = models.SlugField('Слаг', max_length=TAG_SLUG_MAX, unique=True)
 
     class Meta:
         verbose_name = 'Тег'
@@ -59,7 +59,7 @@ class Tag(models.Model):
 class Recipe(models.Model):
     """Модель 'Рецепт'."""
 
-    name = models.CharField('Recipe', max_length=RECIPE_NAME_MAX,
+    name = models.CharField('Название', max_length=RECIPE_NAME_MAX,
                             blank=False, null=False)
     image = models.ImageField('Картинка',
                               upload_to='recipes/images/',
@@ -150,18 +150,18 @@ class BaseListModel(models.Model):
 
     recipe = models.ForeignKey(
         Recipe,
-        verbose_name='Recipe',
+        verbose_name='Рецепт',
         on_delete=models.CASCADE,
         related_name='%(class)s_recipe',
     )
     user = models.ForeignKey(
         User,
-        verbose_name='User',
+        verbose_name='Пользователь',
         on_delete=models.CASCADE,
         related_name='%(class)s_user',
     )
     pub_date = models.DateTimeField(
-        'Publication date',
+        'Дата публикации',
         auto_now_add=True,
     )
 
