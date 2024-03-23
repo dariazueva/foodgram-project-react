@@ -45,21 +45,19 @@ class CustomUserViewSet(UserViewSet):
         if user == author:
             return Response({'Нельзя подписаться на самого себя.'},
                             status=status.HTTP_400_BAD_REQUEST)
-        if request.method == 'POST':
-            subscription, created = Subscriptions.objects.get_or_create(
-                user=user, author=author
+        subscription, created = Subscriptions.objects.get_or_create(
+            user=user, author=author
+        )
+        if created:
+            serializer = SubscriptionsSerializer(
+                subscription,
+                context={'request': request},
+                is_subscribed=True
             )
-            if created:
-                serializer = SubscriptionsSerializer(
-                    subscription,
-                    context={'request': request},
-                    is_subscribed=True
-                )
-                return Response(serializer.data,
-                                status=status.HTTP_201_CREATED)
-            else:
-                return Response({'Вы уже подписаны на данного пользователя.'},
-                                status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
+        return Response({'Вы уже подписаны на данного пользователя.'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
     @subscribe.mapping.delete
     def unsubscribe(self, request, **kwargs):
@@ -70,9 +68,8 @@ class CustomUserViewSet(UserViewSet):
         if subscription:
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response({'Вы не подписаны на данного пользователя.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+        return Response({'Вы не подписаны на данного пользователя.'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'],
             permission_classes=(IsAuthenticated,))
@@ -126,14 +123,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'],
             permission_classes=[IsAuthenticated, ])
     def favorite(self, request, pk=None):
-        if request.method == 'POST':
-            return self.add_to_list(request, pk, Favorites)
+        return self.add_to_list(request, pk, Favorites)
 
     @action(detail=True, methods=['post'],
             permission_classes=[IsAuthenticated, ])
     def shopping_cart(self, request, pk=None):
-        if request.method == 'POST':
-            return self.add_to_list(request, pk, Cart)
+        return self.add_to_list(request, pk, Cart)
 
     @favorite.mapping.delete
     def remove_from_favorites(self, request, pk=None):
