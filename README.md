@@ -19,7 +19,7 @@ https://foodzueva.ddns.net/recipes
 
 ### Основной стек технологий проекта:
 
-django, gunicorn, nginx, docker, react, github actions, node.js, postgresql, djando rest 
+django, gunicorn, nginx, docker, react, github actions, node.js, postgresql, django rest 
 
 ### Как развернуть проект:
 
