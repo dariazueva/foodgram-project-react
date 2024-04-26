@@ -70,4 +70,4 @@ sudo docker compose -f docker-compose.production.yml exec backend python manage.
 
 ## Автор
 Зуева Дарья Дмитриевна
-Github https://github.com/dariazueva
+Github https://github.com/dariazueva/
